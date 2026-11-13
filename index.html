@@ -229,6 +229,29 @@ html[data-theme="dark"] .topbar{background:rgba(7,16,31,.86)}
 .subhead .ln{flex:1; height:0; border-top:1px dashed var(--border)}
 .subhead:first-child{margin-top:2px}
 
+/* ============ 右侧三级分类 ============ */
+.third-nav{
+  display:flex;align-items:center;gap:7px;overflow-x:auto;scrollbar-width:none;
+  margin:-2px 0 16px;padding:2px 0 10px;border-bottom:1px solid var(--border)
+}
+.third-nav::-webkit-scrollbar{display:none}
+.third-label{flex:none;font-size:11px;color:var(--muted);margin-right:2px}
+.third-chip{
+  flex:none;display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);background:var(--cards);
+  color:var(--text-2);border-radius:9px;padding:6px 9px;font:inherit;font-size:11.5px;cursor:pointer;transition:.15s
+}
+.third-chip b{font-size:10px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.third-chip:hover{border-color:var(--border-strong);color:var(--accent)}
+.third-chip.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:650}
+.third-chip.on b{color:var(--accent)}
+.third-group{margin:0 0 24px}
+.third-group:last-child{margin-bottom:0}
+.third-head{display:flex;align-items:center;gap:8px;margin:3px 0 10px}
+.third-head .mark{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.third-head .title{font-size:12.5px;font-weight:650;color:var(--text-2)}
+.third-head .count{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.third-head .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+
 /* ============ 卡片 ============ */
 .cards{display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(252px,1fr))}
 .card{
@@ -418,6 +441,7 @@ html[data-theme="dark"] .hovercard .hc-logo{background:linear-gradient(140deg,va
   padding:9px 10px;border-radius:8px;text-align:left;cursor:pointer
 }
 .more-menu button:hover{background:var(--accent-soft);color:var(--accent)}
+.more-menu button[hidden]{display:none}
 
 .content{padding:24px 28px 64px}
 .welcome{padding:24px 26px;margin-bottom:22px;border-radius:18px;background:
@@ -516,17 +540,17 @@ html[data-theme="dark"] .hovercard .hc-logo{background:linear-gradient(140deg,va
 html[data-theme="dark"] .main{background:radial-gradient(circle at 86% -8%,rgba(59,130,246,.09),transparent 24rem),var(--bg)}
 html[data-theme="dark"] .filterbar{background:var(--bg)}
 
-@media (hover:none){.card-action,.pin{opacity:1}}
+@media (hover:none){.card-action,.pin{opacity:1}.rm{display:grid}}
 @media (max-width:1180px){.cat-overview{grid-template-columns:repeat(3,minmax(0,1fr))}.home-intro{grid-template-columns:1fr}}
 @media (max-width:1000px){
   .main{min-width:0}.topbar{min-height:58px}.topbar .crumb{display:none}.filterbar{top:58px}.content{padding:18px 16px 50px}
   .cat-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.home-note{display:none}
-  .more-menu{position:fixed;right:14px;top:58px}.welcome{margin-bottom:18px}
+  .more-menu{position:fixed;right:14px;top:58px}.welcome{margin-bottom:18px}.third-nav{margin-bottom:13px}
 }
 @media (max-width:620px){
   body{overflow-x:hidden}.topbar .seg,.topbar #btnTheme{display:none}.topbar .top-actions{gap:0}.searchbox{min-width:0}.searchbox kbd{display:none}.searchbox input{padding-right:12px}
   .cat-overview{grid-template-columns:1fr}.cat-tile p{white-space:normal}
-  .cards{grid-template-columns:1fr}.welcome h2{font-size:19px}.welcome .desc{font-size:12.5px}
+  .cards{grid-template-columns:1fr}.welcome h2{font-size:19px}.welcome .desc{font-size:12.5px}.rm{display:grid}
   .detail-drawer{top:auto;left:0;width:100%;height:min(72vh,620px);border-left:0;border-top:1px solid var(--border);border-radius:20px 20px 0 0;transform:translateY(102%)}
   .detail-drawer.show{transform:none}.foot span:last-child{margin-left:0!important}
 }
@@ -588,6 +612,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
         <button class="ibtn" id="btnMore" aria-label="更多操作" aria-expanded="false">•••</button>
         <div class="more-menu" id="moreMenu">
           <button id="btnAdd">＋ 添加一个工具</button>
+          <button id="btnRestore" hidden>↶ 恢复已删除网站</button>
           <button id="btnExport">⇩ 导出浏览器书签</button>
         </div>
       </div>
@@ -673,15 +698,17 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
              url:x.url, host:x.host||'', add:x.add||0, icon:ICONS[x.url]||'', id:'b'+i, local:false };
   });
 
-  var LS={ fav:'nav:favs', added:'nav:added', theme:'nav:theme', view:'nav:view', sort:'nav:sort', open:'nav:open' };
+  var LS={ fav:'nav:favs', added:'nav:added', deleted:'nav:deleted', theme:'nav:theme', view:'nav:view', sort:'nav:sort', open:'nav:open' };
   function load(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
   function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 
   var favs={};
   (load(LS.fav,[])||[]).forEach(function(u){ favs[u]=1; });
   var added=load(LS.added,[])||[]; added.forEach(function(x){ x.local=true; });
+  var deleted={};
+  (load(LS.deleted,[])||[]).forEach(function(k){ deleted[k]=1; });
 
-  /* 两级分类树 —— 改分类名/顺序就改这里，nav-data.js 里的 cat、sub 要与之对应 */
+  /* 左侧两级分类树 —— 三级分类只在右侧内容区展示 */
   var TREE=[
     { name:'AI 创作',          ico:'spark',   subs:['对话与搜索','写作与文案','图像生成与编辑','视频与数字人','音频与音乐','智能体与自动化','综合创作平台'] },
     { name:'设计与媒体',       ico:'palette', subs:['平面与 UI','演示与文档','三维与引擎','影视后期','交互与创意编程','作品与灵感'] },
@@ -693,6 +720,118 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
   ];
   var CATS=TREE.map(function(t){ return t.name; });
   function subsOf(cat){ var t=TREE.filter(function(x){ return x.name===cat; })[0]; return t?t.subs:[]; }
+
+  /* 内容较多的二级分类在右侧继续细分；匹配依据仍是 nav-data.js 的 tag */
+  var THIRD_LEVEL={
+    '学习与资讯|新闻、媒体与热榜':[
+      {name:'热点与社区',tags:['热榜聚合','社区热榜','社交热榜','搜索热榜','社区专题','海外趋势','舆情趋势','舆情事件','微信检索','内容社区']},
+      {name:'国内综合',tags:['官方媒体','政务发布','广播新闻','综合新闻','深度新闻','地方媒体','本地资讯','时政评论','文化教育','生活文化','青年资讯','国际参考']},
+      {name:'财经与行业',tags:['财经新闻','财经媒体','中文财经','证券资讯','财经资讯','零售资讯','能源资讯','环境新闻','地勘资讯','官方发布','行业活动']},
+      {name:'科技与体育',tags:['科技新闻','科研新闻','科普资讯','生命科学','体育新闻','体育组织','数据新闻']},
+      {name:'国际媒体',tags:['国际媒体','通讯社','俄罗斯媒体','俄罗斯新闻','日本媒体','韩国媒体','非洲新闻','香港媒体','华文国际媒体','中文国际媒体','国际传播','国际新闻','国际组织','英文新闻']}
+    ],
+    '数据与研究|国内公共数据':[
+      {name:'国家与行业',tags:['宏观统计','金融统计','宏观政策','应急信息','地震数据','经济数据库','网络统计','金融政策','上市公司公告','财政数据']},
+      {name:'华东地区',tags:['上海市','江苏省','浙江省','安徽省','福建省','山东省','江西省']},
+      {name:'华南与港澳',tags:['广东省','海南省','中国香港','中国澳门']},
+      {name:'华中地区',tags:['河南省','湖北省','湖南省']},
+      {name:'华北与东北',tags:['北京市','城市开放数据','天津市','内蒙古','黑龙江省']},
+      {name:'西部地区',tags:['四川省','贵州省','宁夏','新疆','陕西省']}
+    ],
+    '数据与研究|国际开放数据':[
+      {name:'国际组织与全球',tags:['国际组织','联合国数据','全球数据']},
+      {name:'政府与公共治理',tags:['政府门户','政府数据','监管数据','人口统计','教育统计','政治数据','综合资料']},
+      {name:'城市、地理与环境',tags:['城市数据','地理数据','地理空间','气候环境']},
+      {name:'科研与专题数据',tags:['科研数据','生命科学','健康医疗','社科数据','机器学习','大数据集','舆情事件']},
+      {name:'目录与查询工具',tags:['数据目录','数据搜索','数据查询','数据浏览器','数据社区','数据线索','数据市场']},
+      {name:'经济与技术数据',tags:['经济金融','云端数据','代码数据']}
+    ],
+    '数据与研究|采集、分析与 API':[
+      {name:'采集与数据源',tags:['数据爬取','API数据源','数据聚合','数据集','新媒体数据','社媒数据','移动数据']},
+      {name:'分析与统计',tags:['数据分析','数据处理','搜索指数','社媒指数','网络统计','流量研究','民意调查','计算知识']},
+      {name:'AI、模型与 API',tags:['AI智能体','AI办公','AI镜像代理','大模型代理','模型社区']},
+      {name:'舆情与传播',tags:['舆情分析']}
+    ],
+    '数据与研究|指数、榜单与查询':[
+      {name:'市场与趋势',tags:['市场行情','投资研究','趋势指数','行业指数','行业趋势','短视频数据','社媒数据','行业研究','网站分析','网络统计','消费指数','电影票房','财经数据']},
+      {name:'企业信息',tags:['企业查询','企业公示','企业榜单']},
+      {name:'教育与资质',tags:['大学排名','学历查询','职业资格','征信查询']},
+      {name:'综合查询',tags:['网站榜单','旅行数据','人口统计','语言代码']}
+    ],
+    '数据与研究|可视化与图表':[
+      {name:'通用图表工具',tags:['开源可视化','图表库','在线可视化','词云','图表作品','数据结构','新闻图表']},
+      {name:'科研与生信绘图',tags:['科研绘图','生信分析']},
+      {name:'宏观与全球数据',tags:['宏观数据','国际贸易','全球发展']},
+      {name:'地图与基础设施',tags:['基础设施地图']}
+    ],
+    '开发与在线工具|在线工具箱':[
+      {name:'文件与格式',tags:['文件传输','文件转换','网页转PDF','PDF工具','数据转换']},
+      {name:'视频与媒体',tags:['视频处理','音视频处理','视频压缩','录屏直播']},
+      {name:'图形与图片',tags:['流程图','协作白板','建模绘图','图片压缩','智能抠图']},
+      {name:'文字与效率',tags:['文字处理','社媒运营','Emoji工具']},
+      {name:'开发与综合工具',tags:['在线工具','综合工具箱','开发者工具箱','AI工具']},
+      {name:'系统与生活',tags:['浏览器插件','游戏加速器','健身锻炼']}
+    ],
+    '学习与资讯|视频教程与课程':[
+      {name:'创作者教程',tags:['B站UP']},
+      {name:'课程平台',tags:['开放课程','在线课程','编程学习','设计课程','写作课程','课程搜索','演讲学习','科学教育']},
+      {name:'视频平台',tags:['视频平台']}
+    ],
+    'AI 创作|图像生成与编辑':[
+      {name:'图像生成',tags:['AI绘画','生图生视频']},
+      {name:'模型与资源',tags:['开源模型','模型资源']},
+      {name:'编辑与设计',tags:['AI图片处理','AI换脸','AI设计','动画制作']}
+    ],
+    'AI 创作|视频与数字人':[
+      {name:'视频生成',tags:['AI视频']},
+      {name:'数字人',tags:['AI数字人']},
+      {name:'编辑与音视频',tags:['AI视频编辑','AI音视频']}
+    ],
+    '设计与媒体|三维与引擎':[
+      {name:'建模与雕刻',tags:['3D建模','数字雕刻','三维设计','AI 3D']},
+      {name:'动画与数字人',tags:['三维动画','动作捕捉','数字人']},
+      {name:'引擎与实时',tags:['实时引擎','网页3D','三维重建']},
+      {name:'材质与模型资源',tags:['材质绘制','程序化材质','3D','3D地图模型']}
+    ],
+    '设计与媒体|交互与创意编程':[
+      {name:'创意编程',tags:['创意编程','编程艺术','代码编辑器','网页 3D']},
+      {name:'实时视觉',tags:['投影映射','实时视觉','VJ 视觉','模拟老电视']},
+      {name:'交互与硬件',tags:['交互','硬件交互','计算机视觉']},
+      {name:'引擎与社区',tags:['游戏引擎','数媒论坛']}
+    ],
+    '设计与媒体|作品与灵感':[
+      {name:'设计与创意社区',tags:['数媒艺术','创意','平面设计','创意作品展示','设计师作品','影视作品','UX案例','灵感社区','摄影社区']},
+      {name:'数字博物馆',tags:['数字博物馆','艺术档案','数字档案','文化遗产','历史可视化']},
+      {name:'设计与产品史',tags:['设计史','工业设计史','界面设计史']},
+      {name:'建筑与人物',tags:['建筑灵感','人物摄影']}
+    ],
+    '资源与素材|影音素材':[
+      {name:'视频与影视素材',tags:['视频素材','影视素材','影视剧']},
+      {name:'音乐与配乐',tags:['古典音乐','背景音乐','音乐循环','商用音乐','公共领域音乐','免费视频音乐','歌曲下载']},
+      {name:'音效素材',tags:['音效素材']},
+      {name:'综合订阅素材',tags:['综合素材']}
+    ],
+    '资源与素材|免费素材':[
+      {name:'图片与摄影',tags:['图片素材','日系摄影','创意摄影','壁纸素材']},
+      {name:'图标与插画',tags:['图标素材','开源插画','SVG图标']},
+      {name:'艺术与纹理',tags:['公共领域艺术','纹理素材','CG资源']},
+      {name:'商业素材库',tags:['商业图库','商业素材','素材聚合']},
+      {name:'声音素材',tags:['音效素材']}
+    ],
+    '资源与素材|趣味与休闲':[
+      {name:'地球与天气',tags:['气象可视化','气象地图','卫星地图','全景旅行']},
+      {name:'星空探索',tags:['天文地图','天文互动']},
+      {name:'世界漫游',tags:['航班追踪','随机街景','实时摄像头','海洋追踪']},
+      {name:'互动与科普',tags:['互动实验','交互科普','材料百科']},
+      {name:'轻松娱乐',tags:['复古游戏','像素共创','游戏移植','沙雕新闻','文化档案','同人创作','趣味资讯','公共领域','协作创作','游戏项目']}
+    ]
+  };
+  function thirdScheme(cat,sub){ return THIRD_LEVEL[cat+'|'+sub]||null; }
+  function thirdNameFor(x,scheme){
+    var found='其他';
+    (scheme||[]).some(function(g){ if(g.tags.indexOf(x.tag)>=0){found=g.name;return true;} return false; });
+    return found;
+  }
   var TAXONOMY_MAP={
     'AI 生成|AI 绘画':['AI 创作','图像生成与编辑'],'AI 生成|AI 视频':['AI 创作','视频与数字人'],
     'AI 生成|AI 音频音乐':['AI 创作','音频与音乐'],'AI 生成|AI 音乐':['AI 创作','音频与音乐'],
@@ -724,7 +863,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
   added.forEach(function(x){var m=TAXONOMY_MAP[x.cat+'|'+x.sub];if(m){x.cat=m[0];x.sub=m[1];migrated=true;}});
   if(migrated) save(LS.added,added);
 
-  var state={ cat:'首页', sub:'', tag:'', q:'', sort:load(LS.sort,'default'), view:load(LS.view,'grid'),
+  var state={ cat:'首页', sub:'', third:'', tag:'', q:'', sort:load(LS.sort,'default'), view:load(LS.view,'grid'),
               tagAll:false, limit:120, open:load(LS.open,{'AI 创作':true}) };
   var $=function(s){ return document.querySelector(s); };
   var sectionsEl=$('#sections'), hoverEl=$('#hover'), qEl=$('#q'), mask=$('#mask');
@@ -732,7 +871,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
   var detailDrawer=$('#detailDrawer'), detailMask=$('#detailMask'), searchIndex=-1;
 
   /* ---- 工具函数 ---- */
-  function all(){ return SEED.concat(added); }
+  function all(){ return SEED.concat(added).filter(function(x){return !deleted[key(x)];}); }
   function key(x){ return x.url||x.name; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -769,7 +908,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
   };
   function resetLimit(){ state.limit=120; searchIndex=-1; }
   function choose(cat,sub){
-    state.cat=cat; state.sub=sub||''; state.tag=''; state.tagAll=false; resetLimit();
+    state.cat=cat; state.sub=sub||''; state.third=''; state.tag=''; state.tagAll=false; resetLimit();
     if(TREE.some(function(t){return t.name===cat;})){ state.open[cat]=true; save(LS.open,state.open); }
     hideHover(); closeDetail(); render();
   }
@@ -799,7 +938,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
       if(x.tag) tm[x.tag]=(tm[x.tag]||0)+1;
     });
 
-    var mine=[['首页','grid',''],['全部工具','tool',all().length],['★ 收藏','star',Object.keys(favs).length]];
+    var mine=[['首页','grid',''],['全部工具','tool',all().length],['★ 收藏','star',all().filter(function(x){return !!favs[key(x)];}).length]];
     $('#navMine').innerHTML=mine.map(function(m){
       return '<button class="side-item'+(state.cat===m[0]?' on':'')+'" data-cat="'+esc(m[0])+'">'+
         '<span class="ico">'+SVG[m[1]]+'</span><span class="txt">'+m[0]+'</span>'+
@@ -854,6 +993,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
     Array.prototype.forEach.call($('#navTags').querySelectorAll('button'), function(b){
       b.onclick=function(){
         if(b.dataset.more){ state.tagAll=!state.tagAll; renderSide(); return; }
+        state.third='';
         state.tag=(state.tag===b.dataset.tag)?'':b.dataset.tag;
         if(state.tag){
           var inScope=all().some(function(x){
@@ -868,7 +1008,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
 
     var nsub={}; all().forEach(function(x){ if(x.sub) nsub[x.cat+'|'+x.sub]=1; });
     $('#sideFoot').innerHTML='<b>'+all().length+'</b> 个站点 · <b>'+TREE.length+'</b> 个任务分类<br>'+
-      '<b>'+Object.keys(nsub).length+'</b> 个子类 · <b>'+Object.keys(favs).length+'</b> 个收藏';
+      '<b>'+Object.keys(nsub).length+'</b> 个子类 · <b>'+all().filter(function(x){return !!favs[key(x)];}).length+'</b> 个收藏';
   }
 
   /* ---- 过滤 ---- */
@@ -881,6 +1021,10 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
         if(state.sub && x.sub!==state.sub) return false;
       }
       if(state.tag && x.tag!==state.tag) return false;
+      if(state.third){
+        var scheme=thirdScheme(state.cat,state.sub);
+        if(scheme&&thirdNameFor(x,scheme)!==state.third) return false;
+      }
       if(q){
         var hay=(x.name+' '+x.tip+' '+x.desc+' '+(x.tag||'')+' '+(x.sub||'')+' '+(x.host||'')+' '+x.url+' '+x.cat).toLowerCase();
         if(hay.indexOf(q)<0) return false;
@@ -909,7 +1053,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
         '<button class="card-action info-btn" data-info="'+esc(k)+'" title="查看详情" aria-label="查看 '+esc(x.name)+' 的详情">•••</button>'+
         '<button class="pin'+(favs[k]?' on':'')+'" data-pin="'+esc(k)+'" title="收藏" aria-label="收藏 '+esc(x.name)+'">'+(favs[k]?'★':'☆')+'</button>'+
       '</div>'+
-      (x.local?'<button class="rm" data-rm="'+esc(k)+'" title="删除">×</button>':'')+
+      '<button class="rm" data-rm="'+esc(k)+'" title="删除网站" aria-label="删除 '+esc(x.name)+'">×</button>'+
     '</article>';
   }
 
@@ -920,7 +1064,10 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
       (g.path?'<span class="path">'+esc(g.path)+'</span>':'')+
       '<span class="n">'+g.items.length+' 个</span><span class="line"></span></div>';
     var body;
-    if(g.split){
+    var scheme=thirdScheme(g.path,g.title);
+    if(g.third&&scheme){
+      body=thirdHTML(g,scheme,cls);
+    } else if(g.split){
       var subs=subsOf(g.title), parts='';
       subs.forEach(function(s){
         var arr=g.items.filter(function(x){ return x.sub===s; });
@@ -939,6 +1086,29 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
     return '<div class="subhead"><span class="bar"></span><span class="t">'+esc(title)+'</span>'+
       '<span class="n">'+arr.length+'</span><span class="ln"></span></div>'+
       '<div class="cards'+cls+'">'+arr.map(cardHTML).join('')+'</div>';
+  }
+  function thirdHTML(g,scheme,cls){
+    var scope=all().filter(function(x){return x.cat===g.path&&x.sub===g.title;});
+    var names=scheme.map(function(x){return x.name;});
+    if(scope.some(function(x){return thirdNameFor(x,scheme)==='其他';})) names.push('其他');
+    var tabs='';
+    if(g.thirdFilter){
+      tabs='<div class="third-nav" aria-label="'+esc(g.title)+'三级分类"><span class="third-label">细分</span>'+
+        '<button class="third-chip'+(!state.third?' on':'')+'" data-third="">全部 <b>'+scope.length+'</b></button>'+
+        names.map(function(name){
+          var n=scope.filter(function(x){return thirdNameFor(x,scheme)===name;}).length;
+          if(!n) return '';
+          return '<button class="third-chip'+(state.third===name?' on':'')+'" data-third="'+esc(name)+'">'+esc(name)+' <b>'+n+'</b></button>';
+        }).join('')+'</div>';
+    }
+    var groups=names.map(function(name){
+      var arr=g.items.filter(function(x){return thirdNameFor(x,scheme)===name;});
+      if(!arr.length) return '';
+      return '<div class="third-group"><div class="third-head"><span class="mark"></span><span class="title">'+esc(name)+'</span>'+
+        '<span class="count">'+arr.length+' 个</span><span class="rule"></span></div>'+
+        '<div class="cards'+cls+'">'+arr.map(cardHTML).join('')+'</div></div>';
+    }).join('');
+    return tabs+groups;
   }
 
   function renderOverview(){
@@ -990,11 +1160,11 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
       });
       if(!groups.length&&list.length) groups.push({ title:'搜索结果', path:'', items:list, split:true });
     }else if(state.sub){
-      groups.push({ title:state.sub, path:state.cat, items:list, split:false });
+      groups.push({ title:state.sub, path:state.cat, items:list, split:false, third:!!thirdScheme(state.cat,state.sub), thirdFilter:true });
     }else{
       subsOf(state.cat).forEach(function(s){
         var arr=list.filter(function(x){ return x.sub===s; });
-        if(arr.length) groups.push({ title:s, path:state.cat, items:arr, split:false });
+        if(arr.length) groups.push({ title:s, path:state.cat, items:arr, split:false, third:!!thirdScheme(state.cat,s), thirdFilter:false });
       });
       if(!groups.length&&list.length) groups.push({ title:state.cat, path:'', items:list, split:false });
     }
@@ -1006,6 +1176,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
     $('#count').textContent=home?'共收录 '+all().length+' 个工具':'显示 '+list.length+' / '+fullList.length+' 个结果';
 
     var name=state.sub?state.cat+' › '+state.sub:state.cat;
+    if(state.third) name+=' › '+state.third;
     if(state.tag) name+=' · '+state.tag;
     if(state.q.trim()) name+=' · “'+state.q.trim()+'”';
     $('#crumb').innerHTML=(state.cat==='首页'?'<b>'+esc(name)+'</b>':'<button data-crumb-home>工具台</button><span class="sep">/</span><b>'+esc(name)+'</b>');
@@ -1017,9 +1188,19 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
       '<span><b>'+all().length+'</b>个站点</span>'+
       '<span><b>'+TREE.length+'</b>个任务分类</span>'+
       '<span><b>'+Object.keys(nsub).length+'</b>个子类</span>'+
-      '<span><b>'+Object.keys(favs).length+'</b>个收藏</span>';
+      '<span><b>'+all().filter(function(x){return !!favs[key(x)];}).length+'</b>个收藏</span>';
 
-    renderFilterbar(); renderSide(); bindCards();
+    var restoreBtn=$('#btnRestore'), deletedCount=Object.keys(deleted).length;
+    restoreBtn.hidden=!deletedCount;
+    restoreBtn.textContent='↶ 恢复已删除网站'+(deletedCount?' ('+deletedCount+')':'');
+
+    renderFilterbar(); renderSide(); bindThird(); bindCards();
+  }
+
+  function bindThird(){
+    Array.prototype.forEach.call(sectionsEl.querySelectorAll('[data-third]'),function(b){
+      b.onclick=function(){ state.third=b.dataset.third||''; resetLimit(); hideHover(); render(); };
+    });
   }
 
   function bindCards(){
@@ -1035,8 +1216,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
     Array.prototype.forEach.call(sectionsEl.querySelectorAll('.rm'), function(b){
       b.onclick=function(e){
         e.preventDefault(); e.stopPropagation();
-        added=added.filter(function(x){ return key(x)!==b.dataset.rm; });
-        save(LS.added,added); hideHover(); render(); toast('已删除');
+        var src=findByKey(b.dataset.rm); if(src) removeSite(src);
       };
     });
     Array.prototype.forEach.call(sectionsEl.querySelectorAll('.copy'), function(b){
@@ -1066,6 +1246,17 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
   function findByKey(k){
     var out=null; all().some(function(x){if(key(x)===k){out=x;return true;}return false;}); return out;
   }
+  function removeSite(x){
+    if(!window.confirm('从工具台删除“'+x.name+'”？\n可在“更多 → 恢复已删除网站”中找回内置网站。')) return;
+    var k=key(x);
+    if(x.local){
+      added=added.filter(function(item){return key(item)!==k;});
+      save(LS.added,added);
+    }else{
+      deleted[k]=1; save(LS.deleted,Object.keys(deleted));
+    }
+    hideHover(); closeDetail(); render(); toast('已删除“'+x.name+'”');
+  }
   function fallbackCopy(value){
     var ta=document.createElement('textarea'); ta.value=value; ta.style.position='fixed'; ta.style.opacity='0';
     document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');toast('链接已复制');}catch(e){toast('复制失败');}
@@ -1079,8 +1270,9 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
       (x.tip?'<div class="detail-tip">'+esc(x.tip)+'</div>':'')+
       '<div class="detail-meta">'+(x.tag?'<span>'+esc(x.tag)+'</span>':'')+'<span>'+esc(x.cat)+'</span><span>'+esc(x.sub)+'</span></div>'+
       (x.desc&&x.desc!==x.name?'<div class="detail-desc">'+esc(x.desc)+'</div>':'')+
-      '<div class="detail-actions"><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">打开网站 ↗</a><button data-detail-copy>复制链接</button></div>';
+      '<div class="detail-actions"><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">打开网站 ↗</a><button data-detail-copy>复制链接</button><button data-detail-delete>删除</button></div>';
     var cp=$('[data-detail-copy]'); if(cp) cp.onclick=function(){fallbackCopy(x.url);};
+    var del=$('[data-detail-delete]'); if(del) del.onclick=function(){removeSite(x);};
     detailDrawer.classList.add('show'); detailMask.classList.add('show'); detailDrawer.setAttribute('aria-hidden','false');
   }
   function closeDetail(){
@@ -1120,7 +1312,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
   window.addEventListener('scroll',hideHover,{passive:true});
 
   /* ---- 搜索 / 排序 / 视图 ---- */
-  qEl.addEventListener('input',function(){ state.q=qEl.value; resetLimit(); hideHover(); render(); });
+  qEl.addEventListener('input',function(){ state.q=qEl.value; state.third=''; resetLimit(); hideHover(); render(); });
   function segWire(sel,attr,name){
     Array.prototype.forEach.call(document.querySelectorAll(sel+' button'), function(b){
       b.classList.toggle('on', b.dataset[attr]===state[name]);
@@ -1143,6 +1335,13 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
   };
   moreMenu.onclick=function(e){e.stopPropagation();};
   document.addEventListener('click',function(){moreMenu.classList.remove('show');moreBtn.setAttribute('aria-expanded','false');});
+
+  $('#btnRestore').onclick=function(){
+    var n=Object.keys(deleted).length; if(!n) return;
+    if(!window.confirm('恢复 '+n+' 个已删除网站？')) return;
+    deleted={}; save(LS.deleted,[]); moreMenu.classList.remove('show'); moreBtn.setAttribute('aria-expanded','false');
+    render(); toast('已恢复 '+n+' 个网站');
+  };
 
   /* ---- 侧栏抽屉 ---- */
   function openSide(){ sidebar.classList.add('open'); scrim.classList.add('show'); }
@@ -1233,6 +1432,7 @@ html[data-theme="dark"] .filterbar{background:var(--bg)}
       else if(detailDrawer.classList.contains('show')) closeDetail();
       else if(sidebar.classList.contains('open')) closeSide();
       else if(moreMenu.classList.contains('show')){moreMenu.classList.remove('show');moreBtn.setAttribute('aria-expanded','false');}
+      else if(state.third){ state.third=''; resetLimit(); render(); }
       else { qEl.value=''; state.q=''; resetLimit(); render(); qEl.blur(); }
     }
     else if((e.metaKey||e.ctrlKey)&&e.key==='f'){ e.preventDefault(); qEl.focus(); qEl.select(); }
